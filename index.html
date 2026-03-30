@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Inventory Rezeki Anak</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1; --primary-dark: #4f46e5; --primary-light: #818cf8;
+            --primary-50: #eef2ff; --primary-100: #e0e7ff; --primary-200: #c7d2fe;
+            --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --text-secondary: #64748b;
+            --border: #e2e8f0; --green: #10b981; --yellow: #f59e0b; --red: #ef4444;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --radius: 16px; --radius-sm: 12px;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+        body { font-family:'Inter',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+        /* === LOGIN PAGE === */
+        #page-login { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); }
+        #page-login.hidden { display:none; }
+        .login-card { width:100%; max-width:400px; background:var(--card); border-radius:24px; padding:40px 32px; box-shadow:0 25px 50px rgba(0,0,0,0.15); }
+        .login-logo { width:72px; height:72px; background:linear-gradient(135deg,var(--primary),#8b5cf6); border-radius:20px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:36px; box-shadow:0 8px 24px rgba(99,102,241,0.3); }
+        .login-title { text-align:center; font-size:24px; font-weight:800; margin-bottom:4px; }
+        .login-sub { text-align:center; color:var(--text-secondary); font-size:14px; margin-bottom:28px; }
+        .form-group { margin-bottom:16px; }
+        .form-label { display:block; font-size:13px; font-weight:600; color:var(--text-secondary); margin-bottom:6px; }
+        .form-input { width:100%; padding:14px 16px; border:2px solid var(--border); border-radius:var(--radius-sm); font-size:15px; font-family:inherit; outline:none; transition:border-color 0.2s; background:#f8fafc; }
+        .form-input:focus { border-color:var(--primary); background:#fff; }
+        .btn-primary { width:100%; padding:14px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); color:#fff; border:none; border-radius:var(--radius-sm); font-size:16px; font-weight:700; font-family:inherit; cursor:pointer; transition:transform 0.15s,box-shadow 0.15s; box-shadow:0 4px 12px rgba(99,102,241,0.3); }
+        .btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(99,102,241,0.4); }
+        .btn-primary:active { transform:scale(0.98); }
+        .btn-primary:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+        .login-hint { margin-top:20px; padding:12px; background:#f8fafc; border-radius:var(--radius-sm); font-size:12px; color:var(--text-secondary); border:1px solid var(--border); }
+
+        /* === APP CONTAINER === */
+        #app-container { display:none; }
+        #app-container.active { display:block; }
+
+        /* === TOP HEADER === */
+        .top-header { position:fixed; top:0; left:0; right:0; background:rgba(255,255,255,0.92); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); z-index:50; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; }
+        .header-brand { display:flex; align-items:center; gap:10px; }
+        .header-icon { width:36px; height:36px; background:linear-gradient(135deg,var(--primary),#8b5cf6); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; }
+        .header-title { font-weight:700; font-size:16px; }
+        .header-user { display:flex; align-items:center; gap:8px; }
+        .header-user-name { font-size:13px; font-weight:600; color:var(--primary-dark); }
+        .btn-logout { padding:6px 12px; background:#fee2e2; color:#dc2626; border:none; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; }
+
+        /* === BOTTOM NAV === */
+        .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:rgba(255,255,255,0.95); backdrop-filter:blur(12px); border-top:1px solid var(--border); z-index:50; display:flex; justify-content:space-around; padding:6px 0 env(safe-area-inset-bottom,8px); }
+        .nav-item { display:flex; flex-direction:column; align-items:center; padding:6px 16px; color:var(--text-secondary); font-size:11px; font-weight:500; cursor:pointer; transition:color 0.2s; border:none; background:none; font-family:inherit; }
+        .nav-item .nav-icon { font-size:22px; margin-bottom:2px; }
+        .nav-item.active { color:var(--primary); }
+
+        /* === MAIN CONTENT === */
+        .main-content { padding:68px 16px 80px; max-width:800px; margin:0 auto; }
+
+        /* === PAGE SECTIONS === */
+        .page-section { display:none; animation:fadeUp 0.3s ease; }
+        .page-section.active { display:block; }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+        /* === CARDS === */
+        .card { background:var(--card); border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); border:1px solid var(--border); margin-bottom:12px; }
+        .card-title { font-size:16px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+
+        /* === STATS GRID === */
+        .stats-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:16px; }
+        .stat-card { background:var(--card); border-radius:var(--radius-sm); padding:16px; box-shadow:var(--shadow); border:1px solid var(--border); text-align:center; }
+        .stat-icon { font-size:28px; margin-bottom:4px; }
+        .stat-value { font-size:28px; font-weight:800; }
+        .stat-label { font-size:11px; color:var(--text-secondary); font-weight:500; margin-top:2px; }
+        .stat-green { color:var(--green); }
+        .stat-yellow { color:var(--yellow); }
+        .stat-red { color:var(--red); }
+
+        /* === SEARCH === */
+        .search-box { position:relative; margin-bottom:12px; }
+        .search-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:18px; color:var(--text-secondary); }
+        .search-input { width:100%; padding:14px 16px 14px 44px; border:2px solid var(--border); border-radius:var(--radius-sm); font-size:15px; font-family:inherit; outline:none; transition:border-color 0.2s; background:var(--card); }
+        .search-input:focus { border-color:var(--primary); }
+        .search-count { font-size:12px; color:var(--text-secondary); margin-bottom:8px; padding-left:4px; }
+
+        /* === ITEM CARDS === */
+        .item-card { background:var(--card); border-radius:var(--radius-sm); padding:14px 16px; box-shadow:var(--shadow); border:1px solid var(--border); margin-bottom:8px; transition:transform 0.15s; cursor:pointer; }
+        .item-card:active { transform:scale(0.985); }
+        .item-name { font-weight:700; font-size:14px; margin-bottom:2px; line-height:1.3; }
+        .item-meta { font-size:12px; color:var(--text-secondary); margin-bottom:6px; }
+        .item-bottom { display:flex; align-items:center; justify-content:space-between; }
+        .item-stok { font-size:18px; font-weight:800; }
+        .item-satuan { font-size:12px; color:var(--text-secondary); margin-left:4px; }
+        .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+        .badge-aman { background:#dcfce7; color:#166534; }
+        .badge-menipis { background:#fef3c7; color:#92400e; }
+        .badge-habis { background:#fee2e2; color:#991b1b; }
+        .btn-update { padding:8px 14px; background:var(--primary-50); color:var(--primary-dark); border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; transition:background 0.2s; }
+        .btn-update:hover { background:var(--primary-100); }
+
+        /* === FORM TAMBAH === */
+        .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+        /* === MODAL === */
+        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:flex-end; z-index:100; }
+        .modal-overlay.active { display:flex; }
+        .modal-content { background:#fff; width:100%; max-width:500px; border-radius:20px 20px 0 0; padding:24px; transform:translateY(100%); transition:transform 0.3s ease; max-height:85vh; overflow-y:auto; }
+        .modal-overlay.active .modal-content { transform:translateY(0); }
+        .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+        .modal-close { width:32px; height:32px; border:none; background:#f1f5f9; border-radius:8px; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+        .modal-info { background:#f8fafc; border-radius:var(--radius-sm); padding:12px; margin-bottom:16px; }
+
+        /* === TOAST === */
+        .toast { position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(100px); padding:12px 24px; border-radius:12px; color:#fff; font-weight:600; font-size:14px; z-index:200; opacity:0; transition:all 0.3s ease; max-width:90%; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,0.15); }
+        .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+        .toast.success { background:linear-gradient(135deg,#10b981,#059669); }
+        .toast.error { background:linear-gradient(135deg,#ef4444,#dc2626); }
+        .toast.info { background:linear-gradient(135deg,#6366f1,#4f46e5); }
+
+        /* === LOADING === */
+        .skeleton { background:linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:8px; }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+        .spinner-overlay { position:fixed; inset:0; background:rgba(255,255,255,0.8); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:90; }
+        .spinner { width:44px; height:44px; border:4px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin 0.8s linear infinite; }
+        @keyframes spin { to{transform:rotate(360deg)} }
+        .spinner-text { margin-top:12px; font-size:14px; color:var(--text-secondary); font-weight:500; }
+
+        /* === LOG LIST === */
+        .log-item { display:flex; align-items:center; gap:10px; padding:10px; background:#f8fafc; border-radius:var(--radius-sm); margin-bottom:6px; font-size:13px; }
+        .log-icon { font-size:20px; }
+        .log-info { flex:1; min-width:0; }
+        .log-name { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .log-detail { font-size:11px; color:var(--text-secondary); }
+        .log-amount { font-weight:700; font-size:14px; }
+
+        /* === DUPLICATE WARNING === */
+        .dup-warning { background:#fef3c7; border:1px solid #fcd34d; border-radius:var(--radius-sm); padding:12px; margin-bottom:12px; font-size:13px; }
+        .dup-warning strong { color:#92400e; }
+
+        /* === PROFIL === */
+        .profil-avatar { width:80px; height:80px; background:linear-gradient(135deg,var(--primary-100),var(--primary-200)); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-size:40px; }
+        .profil-name { text-align:center; font-size:22px; font-weight:800; margin-bottom:4px; }
+        .profil-role { text-align:center; margin-bottom:20px; }
+        .profil-role span { display:inline-block; padding:4px 16px; border-radius:20px; font-size:13px; font-weight:600; }
+        .profil-row { display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); font-size:14px; }
+        .profil-row-label { color:var(--text-secondary); }
+        .profil-row-value { font-weight:600; }
+
+        /* === RESPONSIVE === */
+        @media(min-width:768px) {
+            .stats-grid { grid-template-columns:repeat(4,1fr); }
+            .bottom-nav { display:none; }
+            .main-content { padding-bottom:24px; }
+            .modal-overlay { align-items:center; }
+            .modal-content { border-radius:var(--radius); max-width:480px; }
+        }
+        .hide-scrollbar::-webkit-scrollbar { display:none; }
+        .hide-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
+    </style>
+</head>
+<body>
+
+<!-- ====== LOGIN PAGE ====== -->
+<div id="page-login">
+    <div class="login-card">
+        <div class="login-logo">📦</div>
+        <div class="login-title">Inventory App</div>
+        <div class="login-sub">Kelola stok barang dengan mudah</div>
+        <form id="login-form">
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" id="login-username" class="form-input" placeholder="Masukkan username" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="login-password" class="form-input" placeholder="Masukkan password" autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn-primary" style="margin-top:8px">🔐 Masuk</button>
+        </form>
+        <div class="login-hint">
+            <strong>Akun:</strong><br>
+            Admin: admin / admin2026<br>
+            Staff: reha / dedy / halim / fansyah / iza
+        </div>
+    </div>
+</div>
+
+<!-- ====== APP CONTAINER ====== -->
+<div id="app-container">
+    <!-- Top Header -->
+    <header class="top-header">
+        <div class="header-brand">
+            <div class="header-icon">📦</div>
+            <span class="header-title">Inventory</span>
+        </div>
+        <div class="header-user">
+            <span class="header-user-name" id="header-username"></span>
+            <button class="btn-logout" onclick="logout()">Keluar</button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- DASHBOARD -->
+        <div id="page-dashboard" class="page-section active">
+            <h2 style="font-size:20px;font-weight:800;margin-bottom:14px">📊 Dashboard</h2>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-value" id="stat-total">-</div><div class="stat-label">Total Barang</div></div>
+                <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value stat-green" id="stat-aman">-</div><div class="stat-label">Stok Aman</div></div>
+                <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value stat-yellow" id="stat-menipis">-</div><div class="stat-label">Stok Menipis</div></div>
+                <div class="stat-card"><div class="stat-icon">🚨</div><div class="stat-value stat-red" id="stat-habis">-</div><div class="stat-label">Stok Habis</div></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">⚡ Aksi Cepat</div>
+                <div style="display:flex;gap:10px">
+                    <button onclick="navigateTo('barang')" style="flex:1;padding:12px;background:var(--primary-50);color:var(--primary-dark);border:none;border-radius:var(--radius-sm);font-weight:600;cursor:pointer;font-family:inherit;font-size:14px">📋 Lihat Barang</button>
+                    <button onclick="navigateTo('tambah')" style="flex:1;padding:12px;background:#dcfce7;color:#166534;border:none;border-radius:var(--radius-sm);font-weight:600;cursor:pointer;font-family:inherit;font-size:14px">➕ Tambah Barang</button>
+                </div>
+            </div>
+
+            <div class="card" id="section-log">
+                <div class="card-title">📝 Aktivitas Terbaru</div>
+                <div id="log-list"><div style="text-align:center;padding:16px;color:var(--text-secondary);font-size:13px">Memuat data...</div></div>
+            </div>
+        </div>
+
+        <!-- BARANG LIST -->
+        <div id="page-barang" class="page-section">
+            <h2 style="font-size:20px;font-weight:800;margin-bottom:14px">📋 Daftar Barang</h2>
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="search-input" placeholder="Cari nama, kategori, barcode...">
+            </div>
+            <div class="search-count" id="search-count"></div>
+            <div id="barang-loading">
+                <div class="card" style="padding:16px"><div class="skeleton" style="height:16px;width:70%;margin-bottom:8px"></div><div class="skeleton" style="height:12px;width:40%"></div></div>
+                <div class="card" style="padding:16px"><div class="skeleton" style="height:16px;width:60%;margin-bottom:8px"></div><div class="skeleton" style="height:12px;width:35%"></div></div>
+                <div class="card" style="padding:16px"><div class="skeleton" style="height:16px;width:75%;margin-bottom:8px"></div><div class="skeleton" style="height:12px;width:45%"></div></div>
+            </div>
+            <div id="barang-list"></div>
+            <div id="barang-empty" style="display:none;text-align:center;padding:40px 0"><div style="font-size:56px;margin-bottom:12px">📭</div><p style="color:var(--text-secondary)">Tidak ada barang ditemukan</p></div>
+            <div id="load-more-container" style="text-align:center;padding:12px;display:none">
+                <button id="btn-load-more" onclick="loadMoreItems()" style="padding:10px 28px;background:var(--primary-50);color:var(--primary-dark);border:1px solid var(--primary-200);border-radius:var(--radius-sm);font-weight:600;cursor:pointer;font-family:inherit;font-size:14px">Muat lebih banyak...</button>
+            </div>
+        </div>
+
+        <!-- TAMBAH BARANG -->
+        <div id="page-tambah" class="page-section">
+            <h2 style="font-size:20px;font-weight:800;margin-bottom:14px">➕ Tambah Barang Baru</h2>
+            <div class="card">
+                <form id="form-tambah">
+                    <div class="form-group">
+                        <label class="form-label">Nama Barang *</label>
+                        <input type="text" id="tambah-nama" class="form-input" placeholder="Contoh: Indomie Goreng 85G" required>
+                        <div id="dup-check" style="margin-top:6px"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Kategori *</label>
+                        <input type="text" id="tambah-kategori" class="form-input" placeholder="Contoh: Mie, Cemilan, Minuman" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Stok Awal</label>
+                            <input type="number" id="tambah-stok" class="form-input" placeholder="0" min="0" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Satuan *</label>
+                            <select id="tambah-satuan" class="form-input" required>
+                                <option value="Pcs">Pcs</option><option value="Pack">Pack</option><option value="Sachet">Sachet</option>
+                                <option value="Botol">Botol</option><option value="Kaleng">Kaleng</option><option value="Bungkus">Bungkus</option>
+                                <option value="Renteng">Renteng</option><option value="gram">gram</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Merek</label>
+                            <input type="text" id="tambah-merek" class="form-input" placeholder="Contoh: Indomie">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Berat (gr)</label>
+                            <input type="number" id="tambah-berat" class="form-input" placeholder="85">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Barcode</label>
+                        <input type="text" id="tambah-barcode" class="form-input" placeholder="Scan atau ketik barcode">
+                    </div>
+                    <button type="submit" class="btn-primary" id="btn-tambah-submit">💾 Simpan Barang</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- PROFIL -->
+        <div id="page-profil" class="page-section">
+            <h2 style="font-size:20px;font-weight:800;margin-bottom:14px">👤 Profil</h2>
+            <div class="card" style="text-align:center">
+                <div class="profil-avatar">👤</div>
+                <div class="profil-name" id="profil-nama"></div>
+                <div class="profil-role"><span id="profil-role-badge"></span></div>
+                <div style="text-align:left">
+                    <div class="profil-row"><span class="profil-row-label">Username</span><span class="profil-row-value" id="profil-username"></span></div>
+                    <div class="profil-row"><span class="profil-row-label">Role</span><span class="profil-row-value" id="profil-role-text"></span></div>
+                    <div class="profil-row"><span class="profil-row-label">Login Sejak</span><span class="profil-row-value" id="profil-login-time"></span></div>
+                </div>
+                <button onclick="logout()" style="width:100%;margin-top:20px;padding:14px;background:#fee2e2;color:#dc2626;border:none;border-radius:var(--radius-sm);font-weight:700;font-size:15px;cursor:pointer;font-family:inherit">🚪 Keluar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')"><span class="nav-icon">📊</span><span>Beranda</span></button>
+        <button class="nav-item" data-page="barang" onclick="navigateTo('barang')"><span class="nav-icon">📋</span><span>Barang</span></button>
+        <button class="nav-item" data-page="tambah" onclick="navigateTo('tambah')"><span class="nav-icon">➕</span><span>Tambah</span></button>
+        <button class="nav-item" data-page="profil" onclick="navigateTo('profil')"><span class="nav-icon">👤</span><span>Profil</span></button>
+    </nav>
+</div>
+
+<!-- UPDATE MODAL -->
+<div id="modal-update" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="font-weight:700;font-size:18px">📝 Update Stok</h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-info" id="modal-item-info"></div>
+        <form id="form-update">
+            <input type="hidden" id="update-kode">
+            <input type="hidden" id="update-nama-hidden">
+            <div class="form-group">
+                <label class="form-label">Tipe & Jumlah *</label>
+                <div style="display:flex;gap:8px">
+                    <select id="update-tipe" class="form-input" style="width:auto">
+                        <option value="tambah">➕ Tambah</option>
+                        <option value="kurang">➖ Kurang</option>
+                    </select>
+                    <input type="number" id="update-jumlah" class="form-input" placeholder="0" min="1" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Keterangan</label>
+                <textarea id="update-keterangan" class="form-input" rows="2" placeholder="Contoh: Barang masuk dari supplier" style="resize:none"></textarea>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:16px">
+                <button type="button" onclick="closeModal()" style="flex:1;padding:14px;background:#f1f5f9;border:none;border-radius:var(--radius-sm);font-weight:600;cursor:pointer;font-family:inherit;font-size:14px;color:var(--text)">Batal</button>
+                <button type="submit" class="btn-primary" style="flex:1;box-shadow:none" id="btn-update-submit">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- SPINNER OVERLAY -->
+<div id="spinner-overlay" class="spinner-overlay" style="display:none">
+    <div class="spinner"></div>
+    <div class="spinner-text" id="spinner-text">Memuat data...</div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<script>
+// ============================================================
+// CONFIG - GANTI SETELAH DEPLOY APPS SCRIPT
+// ============================================================
+const SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+
+// ============================================================
+// USERS
+// ============================================================
+const USERS = [
+    { username:'admin', password:'admin2026', role:'Admin', nama:'Administrator' },
+    { username:'reha', password:'reha8812', role:'Staff', nama:'Reha' },
+    { username:'dedy', password:'dedy7734', role:'Staff', nama:'Dedy' },
+    { username:'halim', password:'halim5521', role:'Staff', nama:'Halim' },
+    { username:'fansyah', password:'fans9943', role:'Staff', nama:'Fansyah' },
+    { username:'iza', password:'iza06628', role:'Staff', nama:'Iza' }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let currentUser = null;
+let allBarangData = [];
+let displayedData = [];
+let currentPage = 0;
+const PAGE_SIZE = 50;
+const STOK_MINIMUM = 0;
+let dupCheckTimeout = null;
+
+// ============================================================
+// AUTH
+// ============================================================
+function login(username, password) {
+    const user = USERS.find(u => u.username === username.toLowerCase().trim() && u.password === password);
+    if (user) { currentUser = user; saveSession(user); return true; }
+    return false;
+}
+
+function logout() {
+    clearSession(); currentUser = null; allBarangData = [];
+    document.getElementById('app-container').classList.remove('active');
+    document.getElementById('page-login').classList.remove('hidden');
+    showToast('Berhasil keluar', 'info');
+}
+
+function saveSession(user) {
+    localStorage.setItem('inv_session', JSON.stringify({ user, loginTime: new Date().toISOString() }));
+}
+
+function getSession() {
+    const s = localStorage.getItem('inv_session');
+    return s ? JSON.parse(s) : null;
+}
+
+function clearSession() { localStorage.removeItem('inv_session'); }
+
+function checkSession() {
+    const s = getSession();
+    if (s && s.user) { currentUser = s.user; return true; }
+    return false;
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(name) {
+    document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+    const el = document.getElementById('page-' + name);
+    if (el) el.classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => {
+        n.classList.toggle('active', n.dataset.page === name);
+    });
+}
+
+function navigateTo(name) {
+    showPage(name);
+    if (name === 'dashboard') loadDashboard();
+    else if (name === 'barang') loadBarang();
+    else if (name === 'profil') loadProfil();
+}
+
+// ============================================================
+// UTILITY
+// ============================================================
+function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'toast ' + type;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function showSpinner(text) {
+    document.getElementById('spinner-text').textContent = text || 'Memuat...';
+    document.getElementById('spinner-overlay').style.display = 'flex';
+}
+
+function hideSpinner() {
+    document.getElementById('spinner-overlay').style.display = 'none';
+}
+
+function formatDate(d) {
+    if (!d) return '-';
+    const dt = new Date(d);
+    if (isNaN(dt)) return String(d);
+    return dt.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function getStatus(stok) {
+    const s = Number(stok) || 0;
+    if (s <= 0) return { label:'Habis', cls:'badge-habis' };
+    if (s <= STOK_MINIMUM) return { label:'Menipis', cls:'badge-menipis' };
+    return { label:'Aman', cls:'badge-aman' };
+}
+
+// ============================================================
+// API CALLS
+// ============================================================
+async function apiGet(action, params = '') {
+    const sep = SCRIPT_URL.includes('?') ? '&' : '?';
+    const url = SCRIPT_URL + sep + 'action=' + action + (params ? '&' + params : '');
+    const res = await fetch(url);
+    return await res.json();
+}
+
+async function apiPost(body) {
+    const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(body)
+    });
+    return await res.json();
+}
+
+async function fetchBarang() {
+    try {
+        const result = await apiGet('getBarang');
+        if (result.success) return result.data;
+        throw new Error(result.error || 'Error');
+    } catch (e) {
+        console.error('fetchBarang error:', e);
+        showToast('Gagal memuat data: ' + e.message, 'error');
+        return [];
+    }
+}
+
+async function fetchLog() {
+    try { return await apiGet('getLog'); }
+    catch (e) { return []; }
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+async function loadDashboard() {
+    if (allBarangData.length === 0) {
+        showSpinner('Memuat data barang...');
+        allBarangData = await fetchBarang();
+        hideSpinner();
+    }
+    const total = allBarangData.length;
+    const habis = allBarangData.filter(b => (Number(b.stok) || 0) <= 0).length;
+    const menipis = allBarangData.filter(b => { const s = Number(b.stok)||0; return s > 0 && s <= STOK_MINIMUM; }).length;
+    const aman = total - habis - menipis;
+
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-aman').textContent = aman;
+    document.getElementById('stat-menipis').textContent = menipis;
+    document.getElementById('stat-habis').textContent = habis;
+
+    // Load logs
+    try {
+        const logs = await fetchLog();
+        renderLogs(Array.isArray(logs) ? logs.slice(0, 10) : []);
+    } catch (e) { renderLogs([]); }
+}
+
+function renderLogs(logs) {
+    const c = document.getElementById('log-list');
+    if (!logs.length) { c.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-secondary);font-size:13px">Belum ada aktivitas</div>'; return; }
+    c.innerHTML = logs.map(l => {
+        const icon = l.aksi === 'tambah' ? '📈' : l.aksi === 'kurang' ? '📉' : '🆕';
+        const color = l.aksi === 'tambah' ? 'var(--green)' : l.aksi === 'kurang' ? 'var(--red)' : 'var(--primary)';
+        const sign = l.aksi === 'tambah' ? '+' : l.aksi === 'kurang' ? '-' : '';
+        return `<div class="log-item"><span class="log-icon">${icon}</span><div class="log-info"><div class="log-name">${l.namaBarang||'-'}</div><div class="log-detail">${l.user||'-'} · ${formatDate(l.timestamp)}</div></div><span class="log-amount" style="color:${color}">${sign}${l.jumlah||''}</span></div>`;
+    }).join('');
+}
+
+// ============================================================
+// BARANG LIST (with pagination)
+// ============================================================
+async function loadBarang() {
+    if (allBarangData.length === 0) {
+        showSpinner('Memuat data barang...');
+        allBarangData = await fetchBarang();
+        hideSpinner();
+    }
+    document.getElementById('barang-loading').style.display = 'none';
+    displayedData = [...allBarangData];
+    currentPage = 0;
+    renderBarangPage();
+}
+
+function renderBarangPage() {
+    const container = document.getElementById('barang-list');
+    const end = (currentPage + 1) * PAGE_SIZE;
+    const pageData = displayedData.slice(0, end);
+
+    if (displayedData.length === 0) {
+        container.innerHTML = '';
+        document.getElementById('barang-empty').style.display = 'block';
+        document.getElementById('load-more-container').style.display = 'none';
+        document.getElementById('search-count').textContent = '';
+        return;
+    }
+
+    document.getElementById('barang-empty').style.display = 'none';
+    document.getElementById('search-count').textContent = `Menampilkan ${pageData.length} dari ${displayedData.length} item`;
+
+    container.innerHTML = pageData.map(item => {
+        const status = getStatus(item.stok);
+        return `<div class="item-card" onclick="openUpdateModal('${item.kodeBarang}')">
+            <div class="item-name">${item.nama||'-'}</div>
+            <div class="item-meta">${item.kategori||'-'} · ${item.merek||''} ${item.barcode && item.barcode !== '-' ? '· 🔖'+item.barcode : ''}</div>
+            <div class="item-bottom">
+                <div><span class="item-stok">${item.stok||0}</span><span class="item-satuan">${item.satuanStok||item.satuan||'Pcs'}</span></div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <span class="badge ${status.cls}">${status.label}</span>
+                    <button class="btn-update" onclick="event.stopPropagation();openUpdateModal('${item.kodeBarang}')">📝</button>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('load-more-container').style.display = end < displayedData.length ? 'block' : 'none';
+}
+
+function loadMoreItems() {
+    currentPage++;
+    renderBarangPage();
+}
+
+// Search
+document.getElementById('search-input')?.addEventListener('input', function(e) {
+    const q = e.target.value.toLowerCase().trim();
+    if (!q) { displayedData = [...allBarangData]; }
+    else {
+        displayedData = allBarangData.filter(i =>
+            (i.nama||'').toLowerCase().includes(q) ||
+            (i.kategori||'').toLowerCase().includes(q) ||
+            (i.merek||'').toLowerCase().includes(q) ||
+            String(i.barcode||'').includes(q) ||
+            String(i.kodeBarang||'').includes(q)
+        );
+    }
+    currentPage = 0;
+    renderBarangPage();
+});
+
+// ============================================================
+// UPDATE STOK MODAL
+// ============================================================
+function openUpdateModal(kode) {
+    const item = allBarangData.find(b => String(b.kodeBarang) === String(kode));
+    if (!item) return;
+
+    document.getElementById('update-kode').value = item.kodeBarang;
+    document.getElementById('update-nama-hidden').value = item.nama;
+    document.getElementById('modal-item-info').innerHTML = `
+        <div style="font-weight:700;margin-bottom:4px">${item.nama}</div>
+        <div style="font-size:13px;color:var(--text-secondary)">Kode: ${item.kodeBarang} · Stok: <strong style="color:var(--text)">${item.stok||0} ${item.satuanStok||item.satuan||'Pcs'}</strong></div>`;
+    document.getElementById('update-jumlah').value = '';
+    document.getElementById('update-keterangan').value = '';
+    document.getElementById('update-tipe').value = 'tambah';
+    document.getElementById('modal-update').classList.add('active');
+}
+
+function closeModal() { document.getElementById('modal-update').classList.remove('active'); }
+
+document.getElementById('form-update')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const kode = document.getElementById('update-kode').value;
+    const nama = document.getElementById('update-nama-hidden').value;
+    const jumlah = document.getElementById('update-jumlah').value;
+    const tipe = document.getElementById('update-tipe').value;
+    const ket = document.getElementById('update-keterangan').value;
+
+    if (!jumlah || jumlah < 1) { showToast('Jumlah harus > 0', 'error'); return; }
+    if (!confirm(`Yakin ${tipe === 'tambah' ? 'menambah' : 'mengurangi'} stok sebanyak ${jumlah}?`)) return;
+
+    const btn = document.getElementById('btn-update-submit');
+    btn.disabled = true; btn.textContent = '⏳ Menyimpan...';
+
+    try {
+        const result = await apiPost({
+            action: 'updateStok', kodeBarang: kode, namaBarang: nama,
+            jumlah, tipe, keterangan: ket, user: currentUser.username
+        });
+        if (result.success) {
+            showToast(`Stok berhasil di-update! (${result.stokSebelum} → ${result.stokSesudah})`);
+            closeModal();
+            allBarangData = []; loadBarang(); // refresh
+        } else {
+            showToast(result.error || 'Gagal update', 'error');
+        }
+    } catch (err) { showToast('Error: ' + err.message, 'error'); }
+    finally { btn.disabled = false; btn.textContent = 'Simpan'; }
+});
+
+document.getElementById('modal-update')?.addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+
+// ============================================================
+// TAMBAH BARANG
+// ============================================================
+// Duplicate check on input
+document.getElementById('tambah-nama')?.addEventListener('input', function(e) {
+    clearTimeout(dupCheckTimeout);
+    const val = e.target.value.trim();
+    if (val.length < 3) { document.getElementById('dup-check').innerHTML = ''; return; }
+
+    dupCheckTimeout = setTimeout(() => {
+        const matches = allBarangData.filter(i =>
+            (i.nama||'').toLowerCase().includes(val.toLowerCase())
+        ).slice(0, 5);
+
+        if (matches.length > 0) {
+            document.getElementById('dup-check').innerHTML = `<div class="dup-warning"><strong>⚠️ Item mirip ditemukan:</strong><br>${matches.map(m => `• ${m.nama} (Stok: ${m.stok||0})`).join('<br>')}</div>`;
+        } else {
+            document.getElementById('dup-check').innerHTML = '<div style="font-size:12px;color:var(--green);font-weight:500">✅ Nama unik, belum ada item serupa</div>';
+        }
+    }, 400);
+});
+
+document.getElementById('form-tambah')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const nama = document.getElementById('tambah-nama').value.trim();
+    const kategori = document.getElementById('tambah-kategori').value.trim();
+    const stok = document.getElementById('tambah-stok').value || '0';
+    const satuan = document.getElementById('tambah-satuan').value;
+    const merek = document.getElementById('tambah-merek').value.trim();
+    const berat = document.getElementById('tambah-berat').value;
+    const barcode = document.getElementById('tambah-barcode').value.trim();
+
+    if (!nama || !kategori) { showToast('Nama dan Kategori wajib diisi!', 'error'); return; }
+
+    // Check exact duplicate locally
+    const exact = allBarangData.find(i => (i.nama||'').toLowerCase().trim() === nama.toLowerCase());
+    if (exact) {
+        showToast(`Item "${exact.nama}" sudah ada!`, 'error');
+        return;
+    }
+
+    if (!confirm(`Tambah item baru "${nama}"?`)) return;
+
+    const btn = document.getElementById('btn-tambah-submit');
+    btn.disabled = true; btn.textContent = '⏳ Menyimpan...';
+
+    try {
+        const result = await apiPost({
+            action: 'tambahBarang', nama, kategori, stok, satuan,
+            merek, berat, barcode: barcode || '-', user: currentUser.username
+        });
+        if (result.success) {
+            showToast(`Barang "${nama}" berhasil ditambahkan!`);
+            this.reset(); document.getElementById('dup-check').innerHTML = '';
+            allBarangData = []; // force refresh
+            navigateTo('barang');
+        } else if (result.duplicate) {
+            showToast(result.error, 'error');
+        } else {
+            showToast(result.error || 'Gagal', 'error');
+        }
+    } catch (err) { showToast('Error: ' + err.message, 'error'); }
+    finally { btn.disabled = false; btn.textContent = '💾 Simpan Barang'; }
+});
+
+// ============================================================
+// PROFIL
+// ============================================================
+function loadProfil() {
+    if (!currentUser) return;
+    document.getElementById('profil-nama').textContent = currentUser.nama;
+    document.getElementById('profil-username').textContent = currentUser.username;
+    document.getElementById('profil-role-text').textContent = currentUser.role;
+    const badge = document.getElementById('profil-role-badge');
+    badge.textContent = currentUser.role;
+    badge.style.cssText = currentUser.role === 'Admin'
+        ? 'background:#ede9fe;color:#6d28d9' : 'background:#dbeafe;color:#1d4ed8';
+    const s = getSession();
+    document.getElementById('profil-login-time').textContent = s ? formatDate(s.loginTime) : '-';
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function initApp() {
+    document.getElementById('page-login').classList.add('hidden');
+    document.getElementById('app-container').classList.add('active');
+    document.getElementById('header-username').textContent = currentUser.nama;
+    navigateTo('dashboard');
+}
+
+document.getElementById('login-form')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const u = document.getElementById('login-username').value.trim();
+    const p = document.getElementById('login-password').value;
+    if (!u || !p) { showToast('Username & password wajib diisi', 'error'); return; }
+    if (login(u, p)) {
+        showToast('Selamat datang, ' + currentUser.nama + '!');
+        initApp();
+    } else {
+        showToast('Username atau password salah!', 'error');
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (checkSession()) { initApp(); }
+});
+</script>
+</body>
+</html>
