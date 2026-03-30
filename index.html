@@ -366,7 +366,7 @@
 // ============================================================
 // CONFIG - GANTI SETELAH DEPLOY APPS SCRIPT
 // ============================================================
-const SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwhdclkBYOpPMRczQHRsln9RxWau5BoKR-RLV0XxmVgI2mOfPeLrR8XAOlsD8yqpdTJ/exec';
 
 // ============================================================
 // USERS
@@ -477,22 +477,25 @@ function getStatus(stok) {
 }
 
 // ============================================================
-// API CALLS
+// API CALLS (Google Apps Script CORS-compatible)
 // ============================================================
 async function apiGet(action, params = '') {
-    const sep = SCRIPT_URL.includes('?') ? '&' : '?';
-    const url = SCRIPT_URL + sep + 'action=' + action + (params ? '&' + params : '');
-    const res = await fetch(url);
-    return await res.json();
+    const url = SCRIPT_URL + '?action=' + action + (params ? '&' + params : '');
+    const res = await fetch(url, { redirect: 'follow' });
+    const text = await res.text();
+    try { return JSON.parse(text); }
+    catch(e) { console.error('API response not JSON:', text.substring(0, 200)); throw new Error('API error'); }
 }
 
 async function apiPost(body) {
     const res = await fetch(SCRIPT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
+        redirect: 'follow',
         body: JSON.stringify(body)
     });
-    return await res.json();
+    const text = await res.text();
+    try { return JSON.parse(text); }
+    catch(e) { console.error('API response not JSON:', text.substring(0, 200)); throw new Error('API error'); }
 }
 
 async function fetchBarang() {
