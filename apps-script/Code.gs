@@ -17,42 +17,47 @@ function createJsonOutput(data) {
 }
 
 // ============================================================
-// GET HANDLER
+// GET HANDLER (Support JSONP & standard GET)
 // ============================================================
 function doGet(e) {
   try {
     const action = e.parameter.action;
+    let result = {};
 
-    if (action === 'getBarang') {
-      return createJsonOutput(getBarang());
-    } else if (action === 'getLog') {
-      return createJsonOutput(getLog());
-    } else if (action === 'checkDuplicate') {
-      const nama = e.parameter.nama || '';
-      return createJsonOutput(checkDuplicate(nama));
-    } else {
-      return createJsonOutput({ error: 'Action tidak valid', actions: ['getBarang', 'getLog', 'checkDuplicate'] });
+    if (action === 'getBarang') result = getBarang();
+    else if (action === 'getLog') result = getLog();
+    else if (action === 'checkDuplicate') result = checkDuplicate(e.parameter.nama || '');
+    else result = { error: 'Action tidak valid', actions: ['getBarang', 'getLog', 'checkDuplicate'] };
+
+    // JSONP Support for CORS bypass
+    if (e.parameter.callback) {
+      return ContentService.createTextOutput(e.parameter.callback + '(' + JSON.stringify(result) + ')')
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
     }
+
+    return createJsonOutput(result);
   } catch (err) {
     return createJsonOutput({ error: err.message });
   }
 }
 
 // ============================================================
-// POST HANDLER
+// POST HANDLER (Handles everything via POST text/plain)
 // ============================================================
 function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
     const action = body.action;
 
-    if (action === 'updateStok') {
-      return createJsonOutput(updateStok(body));
-    } else if (action === 'tambahBarang') {
-      return createJsonOutput(tambahBarang(body));
-    } else {
-      return createJsonOutput({ error: 'Action tidak valid' });
-    }
+    let result = {};
+    if (action === 'updateStok') result = updateStok(body);
+    else if (action === 'tambahBarang') result = tambahBarang(body);
+    else if (action === 'getBarang') result = getBarang();
+    else if (action === 'getLog') result = getLog();
+    else if (action === 'checkDuplicate') result = checkDuplicate(body.nama || '');
+    else result = { error: 'Action tidak valid' };
+
+    return createJsonOutput(result);
   } catch (err) {
     return createJsonOutput({ error: err.message });
   }

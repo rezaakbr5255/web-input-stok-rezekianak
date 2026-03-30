@@ -477,16 +477,8 @@ function getStatus(stok) {
 }
 
 // ============================================================
-// API CALLS (Google Apps Script CORS-compatible)
+// API CALLS (Google Apps Script CORS-compatible via POST)
 // ============================================================
-async function apiGet(action, params = '') {
-    const url = SCRIPT_URL + '?action=' + action + (params ? '&' + params : '');
-    const res = await fetch(url, { redirect: 'follow' });
-    const text = await res.text();
-    try { return JSON.parse(text); }
-    catch(e) { console.error('API response not JSON:', text.substring(0, 200)); throw new Error('API error'); }
-}
-
 async function apiPost(body) {
     const res = await fetch(SCRIPT_URL, {
         method: 'POST',
@@ -500,7 +492,7 @@ async function apiPost(body) {
 
 async function fetchBarang() {
     try {
-        const result = await apiGet('getBarang');
+        const result = await apiPost({ action: 'getBarang' });
         if (result.success) return result.data;
         throw new Error(result.error || 'Error');
     } catch (e) {
@@ -511,7 +503,7 @@ async function fetchBarang() {
 }
 
 async function fetchLog() {
-    try { return await apiGet('getLog'); }
+    try { return await apiPost({ action: 'getLog' }); }
     catch (e) { return []; }
 }
 
